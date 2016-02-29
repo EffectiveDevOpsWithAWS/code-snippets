@@ -9,7 +9,7 @@
                 "s3:PutObjectAcl"
             ],
             "Resource": [
-                "arn:aws:s3:::effective-devops-ghost/*"
+                "arn:aws:s3:::YOUR-BUCKET/*"
             ]
         }
     ]
