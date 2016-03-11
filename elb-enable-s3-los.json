@@ -1,0 +1,11 @@
+{
+    "LoadBalancerAttributes": {
+        "AccessLog": {
+            "Enabled": true,
+            "EmitInterval": 60,
+            "S3BucketName": "S3_BUCKET_NAME",
+            "S3BucketPrefix": "PREFIX"
+        }
+    },
+    "LoadBalancerName": "ELB_NAME"
+}
