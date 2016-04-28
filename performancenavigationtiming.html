@@ -5,28 +5,7 @@
 <script>
 function init() {
   var navigationTiming = performance.timing;
-  document.write(
-    "<p> Entry Type: " + navigationTiming.entryType + "</p>\n" +
-    "<p> Start Time: " + navigationTiming.startTime + "</p>\n" +
-    "<p> Duration: "   + navigationTiming.duration  + "</p>\n" +
-    "<p> Unload: "     + (navigationTiming.unloadEventEnd -
-                          navigationTiming.unloadEventStart)  + "</p>\n" +
-    "<p> Redirect: "   + (navigationTiming.redirectEnd -
-                          navigationTiming.redirectStart)     + "</p>\n" +
-    "<p> App Cache: "  + (navigationTiming.domainLookupStart -
-                          navigationTiming.fetchStart)        + "</p>\n" +
-    "<p> DNS: "        + (navigationTiming.domainLookupEnd -
-                          navigationTiming.domainLookupStart) + "</p>\n" +
-    "<p> TCP: "        + (navigationTiming.connectEnd -
-                          navigationTiming.connectStart)      + "</p>\n" +
-    "<p> Request: "    + (navigationTiming.responseStart -
-                          navigationTiming.requestStart)      + "</p>\n" +
-    "<p> Response: "   + (navigationTiming.responseEnd -
-                          navigationTiming.responseStart)     + "</p>\n" +
-    "<p> Processing: " + (navigationTiming.loadEventStart -
-                          navigationTiming.responseEnd)       + "</p>\n" +
-    "<p> Onload: "     + (navigationTiming.loadEventEnd -
-                          navigationTiming.loadEventStart)    + "</p>\n");
+  document.write("<pre>" + JSON.stringify(navigationTiming, undefined, 2) + "</pre>");
 }
 </script>
 </body>
