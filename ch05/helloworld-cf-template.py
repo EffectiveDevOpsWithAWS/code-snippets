@@ -1,8 +1,12 @@
 #! /usr/bin/env python
 
 from troposphere import Ref, Template, ec2, Parameter, Output, Join, GetAtt, Base64, cloudformation
+from json import load
+from urllib2 import urlopen
 
 ApplicationPort = "3000"
+PublicIp = load(urlopen('http://jsonip.com'))['ip']
+PublicCidrIp = "%s/32" % PublicIp
 
 t = Template()
 kp = Parameter(
@@ -21,7 +25,7 @@ ec2.SecurityGroupRule(
     IpProtocol="tcp",
     FromPort="22",
     ToPort="22",
-    CidrIp="0.0.0.0/0",
+    CidrIp=PublicCidrIp,
   ),
 ec2.SecurityGroupRule(
     IpProtocol="tcp",
