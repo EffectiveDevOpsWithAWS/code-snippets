@@ -14,7 +14,7 @@ GithubAnsibleURL = "https://github.com/%s/ansible" % GithubAccount
 AnsiblePullCmd = "/usr/local/bin/ansible-pull -U %s %s.yml -i localhost" \
   % (GithubAnsibleURL, ApplicationName)
 
-PublicIp = load(urlopen('http://jsonip.com'))['ip']
+PublicIp = load(urlopen('https://api.ipify.org?format=json'))['ip']
 PublicCidrIp = "%s/32" % PublicIp
 
 t = Template()
