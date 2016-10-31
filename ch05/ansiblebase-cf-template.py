@@ -61,7 +61,8 @@ ud = Base64(Join('\n', [
         "sudo pip install ansible",
         AnsiblePullCmd,
         "echo '*/10 * * * * %s' > /etc/cron.d/ansible-pull" % AnsiblePullCmd
-    ]))
+    ],
+))
 
 instance = t.add_resource(ec2.Instance(
     "instance",

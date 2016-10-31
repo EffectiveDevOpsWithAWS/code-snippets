@@ -1,14 +1,35 @@
 #!/usr/bin/env python
 
-from troposphere import Ref, Template, ec2, Parameter, Output, Join, GetAtt, Base64, cloudformation
-from json import load
-from urllib2 import urlopen
+from troposphere import (
+    Base64,
+    cloudformation,
+    ec2,
+    GetAtt,
+    Join,
+    Output,
+    Parameter,
+    Ref,
+    Template,
+)
 
-from troposphere.iam import Role, InstanceProfile
-from troposphere.iam import PolicyType as IAMPolicy
+from troposphere.iam import (
+    InstanceProfile,
+    PolicyType as IAMPolicy,
+    Role,
+)
 
-from awacs.aws import Allow, Statement, Action, Principal, Policy
+from awacs.aws import (
+    Action,
+    Allow,
+    Policy,
+    Principal,
+    Statement,
+)
+
 from awacs.sts import AssumeRole
+
+from ipify import get_ip
+from ipaddress import ip_network
 
 ApplicationName = "nodeserver"
 ApplicationPort = "3000"
@@ -19,35 +40,35 @@ GithubAnsibleURL = "https://github.com/%s/ansible" % GithubAccount
 AnsiblePullCmd = "/usr/local/bin/ansible-pull -U %s %s.yml -i localhost" \
   % (GithubAnsibleURL, ApplicationName)
 
-PublicIp = load(urlopen('http://jsonip.com'))['ip']
-PublicCidrIp = "%s/32" % PublicIp
+PublicCidrIp = str(ip_network(get_ip()))
 
 t = Template()
-kp = Parameter(
+
+kp = t.add_parameter(Parameter(
     "KeyPair",
     Description="Name of an existing EC2 KeyPair to SSH",
     Type="AWS::EC2::KeyPair::KeyName",
-    ConstraintDescription="must be the name of an existing EC2 KeyPair."
-  )
-t.add_parameter(kp)
+    ConstraintDescription="must be the name of an existing EC2 KeyPair.",
+))
 
-sg = ec2.SecurityGroup('SecurityGroup')
-sg.GroupDescription = "Allow SSH and TCP/%s access" \
-  % ApplicationPort
-sg.SecurityGroupIngress = [
-ec2.SecurityGroupRule(
-    IpProtocol="tcp",
-    FromPort="22",
-    ToPort="22",
-    CidrIp=PublicCidrIp,
-  ),
-ec2.SecurityGroupRule(
-    IpProtocol="tcp",
-    FromPort=ApplicationPort,
-    ToPort=ApplicationPort,
-    CidrIp="0.0.0.0/0",
-  )]
-t.add_resource(sg)
+sg = t.add_resource(ec2.SecurityGroup(
+    "SecurityGroup",
+    GroupDescription="Allow SSH and TCP/{} access".format(ApplicationPort),
+    SecurityGroupIngress=[
+        ec2.SecurityGroupRule(
+            IpProtocol="tcp",
+            FromPort="22",
+            ToPort="22",
+            CidrIp=PublicCidrIp,
+        ),
+        ec2.SecurityGroupRule(
+            IpProtocol="tcp",
+            FromPort=ApplicationPort,
+            ToPort=ApplicationPort,
+            CidrIp="0.0.0.0/0",
+          ),
+    ],
+))
 
 ud = Base64(Join('\n', [
         "#!/bin/bash",
@@ -56,9 +77,11 @@ ud = Base64(Join('\n', [
         "sudo pip install ansible",
         AnsiblePullCmd,
         "echo '*/10 * * * * %s' > /etc/cron.d/ansible-pull" % AnsiblePullCmd
-    ]))
+    ],
+))
 
-t.add_resource(Role("Role",
+t.add_resource(Role(
+    "Role",
     AssumeRolePolicyDocument=Policy(
         Statement=[
             Statement(
@@ -76,11 +99,13 @@ t.add_resource(InstanceProfile(
     Roles=[Ref("Role")]
 ))
 
-t.add_resource(IAMPolicy("Policy",
+t.add_resource(IAMPolicy(
+    "Policy",
     PolicyName="AllowS3",
     PolicyDocument=Policy(
         Statement=[
-            Statement(Effect=Allow,
+            Statement(
+                Effect=Allow,
                 Action=[Action("s3", "*")],
                 Resource=["*"])
         ]
@@ -88,29 +113,29 @@ t.add_resource(IAMPolicy("Policy",
     Roles=[Ref("Role")]
 ))
 
-instance = ec2.Instance("instance",
+instance = t.add_resource(ec2.Instance(
+    "instance",
     ImageId="ami-f5f41398",
     InstanceType="t2.micro",
     SecurityGroups=[Ref(sg)],
     KeyName=Ref(kp),
     UserData=ud,
     IamInstanceProfile=Ref("InstanceProfile")
-)
-t.add_resource(instance)
+))
 
-ip = Output(
+t.add_output(Output(
     "InstancePublicIp",
     Description="Public IP of our instance.",
-    Value=GetAtt(instance, "PublicIp")
-  )
-t.add_output(ip)
+    Value=GetAtt(instance, "PublicIp"),
+))
 
-web = Output(
+t.add_output(Output(
     "WebUrl",
     Description="Application endpoint",
-    Value=Join("", ["http://", GetAtt(instance, "PublicDnsName"), \
-      ":", ApplicationPort])
-  )
-t.add_output(web) 
+    Value=Join("", [
+        "http://", GetAtt(instance, "PublicDnsName"),
+        ":", ApplicationPort
+    ]),
+))
 
 print t.to_json()
