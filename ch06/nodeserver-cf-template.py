@@ -26,6 +26,12 @@ from awacs.aws import (
     Statement,
 )
 
+from troposphere.autoscaling import (
+    AutoScalingGroup,
+    Tag,
+    LaunchConfiguration
+)
+
 from awacs.sts import AssumeRole
 
 from ipify import get_ip

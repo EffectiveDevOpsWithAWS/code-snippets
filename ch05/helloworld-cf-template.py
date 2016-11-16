@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 
+from ipaddress import ip_network
+
+from ipify import get_ip
+
 from troposphere import (
     Base64,
-    cloudformation,
     ec2,
     GetAtt,
     Join,
@@ -11,9 +14,6 @@ from troposphere import (
     Ref,
     Template,
 )
-
-from ipify import get_ip
-from ipaddress import ip_network
 
 ApplicationPort = "3000"
 PublicCidrIp = str(ip_network(get_ip()))
@@ -42,19 +42,18 @@ sg = t.add_resource(ec2.SecurityGroup(
             FromPort=ApplicationPort,
             ToPort=ApplicationPort,
             CidrIp="0.0.0.0/0",
-          ),
+        ),
     ],
 ))
 
 ud = Base64(Join('\n', [
-        "#!/bin/bash",
-        "exec > /var/log/userdata.log 2>&1",
-        "sudo yum install --enablerepo=epel -y nodejs",
-        "wget http://bit.ly/1QRjORH -O /home/ec2-user/helloworld.js",
-        "wget http://bit.ly/1Q4QBhB -O /etc/init/helloworld.conf",
-        "start helloworld"
-    ],
-))
+    "#!/bin/bash",
+    "exec > /var/log/userdata.log 2>&1",
+    "sudo yum install --enablerepo=epel -y nodejs",
+    "wget http://bit.ly/1QRjORH -O /home/ec2-user/helloworld.js",
+    "wget http://bit.ly/1Q4QBhB -O /etc/init/helloworld.conf",
+    "start helloworld"
+]))
 
 instance = t.add_resource(ec2.Instance(
     "instance",
