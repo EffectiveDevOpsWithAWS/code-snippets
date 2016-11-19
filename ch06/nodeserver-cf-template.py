@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 """Generating CloudFormation template."""
 
+from ipaddress import ip_network
+
+from awacs.sts import AssumeRole
+
+from ipify import get_ip
+
 from troposphere import (
     Base64,
     ec2,
@@ -26,10 +32,6 @@ from awacs.aws import (
     Statement,
 )
 
-from awacs.sts import AssumeRole
-
-from ipify import get_ip
-from ipaddress import ip_network
 
 ApplicationName = "nodeserver"
 ApplicationPort = "3000"
@@ -79,7 +81,7 @@ ud = Base64(Join('\n', [
     "sudo yum install --enablerepo=epel -y git",
     "sudo pip install ansible",
     AnsiblePullCmd,
-    "echo '*/10 * * * * %s' > /etc/cron.d/ansible-pull" % AnsiblePullCmd
+    "echo '*/10 * * * * {}' > /etc/cron.d/ansible-pull".format(AnsiblePullCmd)
 ]))
 
 t.add_resource(Role(

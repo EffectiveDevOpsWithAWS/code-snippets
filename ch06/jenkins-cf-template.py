@@ -32,7 +32,6 @@ from awacs.aws import (
 
 from awacs.sts import AssumeRole
 
-
 ApplicationName = "jenkins"
 ApplicationPort = "8080"
 

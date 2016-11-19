@@ -21,14 +21,14 @@ PublicCidrIp = str(ip_network(get_ip()))
 
 t = Template()
 
-kp = t.add_parameter(Parameter(
+t.add_parameter(Parameter(
     "KeyPair",
     Description="Name of an existing EC2 KeyPair to SSH",
     Type="AWS::EC2::KeyPair::KeyName",
     ConstraintDescription="must be the name of an existing EC2 KeyPair.",
 ))
 
-sg = t.add_resource(ec2.SecurityGroup(
+t.add_resource(ec2.SecurityGroup(
     "SecurityGroup",
     GroupDescription="Allow SSH and TCP/{} access".format(ApplicationPort),
     SecurityGroupIngress=[
@@ -56,26 +56,26 @@ ud = Base64(Join('\n', [
     "start helloworld"
 ]))
 
-instance = t.add_resource(ec2.Instance(
+t.add_resource(ec2.Instance(
     "instance",
     ImageId="ami-f5f41398",
     InstanceType="t2.micro",
-    SecurityGroups=[Ref(sg)],
-    KeyName=Ref(kp),
+    SecurityGroups=[Ref("SecurityGroup")],
+    KeyName=Ref("KeyPair"),
     UserData=ud,
 ))
 
 t.add_output(Output(
     "InstancePublicIp",
     Description="Public IP of our instance.",
-    Value=GetAtt(instance, "PublicIp"),
+    Value=GetAtt("instance", "PublicIp"),
 ))
 
 t.add_output(Output(
     "WebUrl",
     Description="Application endpoint",
     Value=Join("", [
-        "http://", GetAtt(instance, "PublicDnsName"),
+        "http://", GetAtt("instance", "PublicDnsName"),
         ":", ApplicationPort
     ]),
 ))

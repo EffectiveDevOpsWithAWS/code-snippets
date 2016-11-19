@@ -60,20 +60,20 @@ PublicCidrIp = str(ip_network(get_ip()))
 
 t = Template()
 
-kp = t.add_parameter(Parameter(
+t.add_parameter(Parameter(
     "KeyPair",
     Description="Name of an existing EC2 KeyPair to SSH",
     Type="AWS::EC2::KeyPair::KeyName",
     ConstraintDescription="must be the name of an existing EC2 KeyPair.",
 ))
 
-vpcid = t.add_parameter(Parameter(
+t.add_parameter(Parameter(
     "VpcId",
     Type="AWS::EC2::VPC::Id",
     Description="VPC"
 ))
 
-sn = t.add_parameter(Parameter(
+t.add_parameter(Parameter(
     "PublicSubnet",
     Description="PublicSubnet",
     Type="List<AWS::EC2::Subnet::Id>",
@@ -81,7 +81,7 @@ sn = t.add_parameter(Parameter(
 ))
 
 
-sg = t.add_resource(ec2.SecurityGroup(
+t.add_resource(ec2.SecurityGroup(
     "SecurityGroup",
     GroupDescription="Allow SSH and TCP/{} access".format(ApplicationPort),
     SecurityGroupIngress=[
@@ -101,22 +101,22 @@ sg = t.add_resource(ec2.SecurityGroup(
     VpcId=Ref("VpcId")
 ))
 
-load_balancer_security_group = t.add_resource(ec2.SecurityGroup(
+t.add_resource(ec2.SecurityGroup(
     "LoadBalancerSecurityGroup",
     GroupDescription="Web load balancer security group.",
-    VpcId=Ref(vpcid),
+    VpcId=Ref("VpcId"),
     SecurityGroupIngress=[
         ec2.SecurityGroupRule(
             IpProtocol="tcp",
             FromPort="3000",
             ToPort="3000",
-            CidrIp='0.0.0.0/0',
+            CidrIp="0.0.0.0/0",
         ),
     ],
 ))
 
 
-LoadBalancer = t.add_resource(elb.LoadBalancer(
+t.add_resource(elb.LoadBalancer(
     "LoadBalancer",
     Scheme="internet-facing",
     Listeners=[
@@ -139,8 +139,8 @@ LoadBalancer = t.add_resource(elb.LoadBalancer(
         Timeout=10,
     ),
     CrossZone=True,
-    Subnets=Ref(sn),
-    SecurityGroups=[Ref(load_balancer_security_group)],
+    Subnets=Ref("PublicSubnet"),
+    SecurityGroups=[Ref("LoadBalancerSecurityGroup")],
 ))
 
 t.add_output(Output(
@@ -152,7 +152,7 @@ t.add_output(Output(
     ]),
 ))
 
-ud = Base64(Join('\n', [
+ud = Base64(Join("\n", [
     "#!/bin/bash",
     "exec > /var/log/userdata.log 2>&1",
     "sudo yum install --enablerepo=epel -y git",
@@ -194,45 +194,45 @@ t.add_resource(IAMPolicy(
     Roles=[Ref("Role")]
 ))
 
-ScaleCapacity = t.add_parameter(Parameter(
+t.add_parameter(Parameter(
     "ScaleCapacity",
     Default="3",
     Type="String",
     Description="Number servers to run",
 ))
 
-instanceType = t.add_parameter(Parameter(
-    'InstanceType',
-    Type='String',
-    Description='WebServer EC2 instance type',
-    Default='t2.micro',
+t.add_parameter(Parameter(
+    "InstanceType",
+    Type="String",
+    Description="WebServer EC2 instance type",
+    Default="t2.micro",
     AllowedValues=[
-        't2.micro',
-        't2.small',
-        't2.medium',
-        't2.large'
+        "t2.micro",
+        "t2.small",
+        "t2.medium",
+        "t2.large"
     ],
-    ConstraintDescription='must be a valid EC2 instance type.',
+    ConstraintDescription="must be a valid EC2 instance type.",
 ))
 
-LaunchConfiguration = t.add_resource(LaunchConfiguration(
+t.add_resource(LaunchConfiguration(
     "LaunchConfiguration",
     UserData=ud,
     ImageId="ami-f5f41398",
-    KeyName=Ref(kp),
-    SecurityGroups=[Ref(sg)],
-    InstanceType=Ref(instanceType),
+    KeyName=Ref("KeyPair"),
+    SecurityGroups=[Ref("SecurityGroup")],
+    InstanceType=Ref("InstanceType"),
     IamInstanceProfile=Ref("InstanceProfile"),
 ))
 
 t.add_resource(AutoScalingGroup(
     "AutoscalingGroup",
-    DesiredCapacity=Ref(ScaleCapacity),
+    DesiredCapacity=Ref("ScaleCapacity"),
     LaunchConfigurationName=Ref(LaunchConfiguration),
     MinSize=2,
     MaxSize=5,
-    LoadBalancerNames=[Ref(LoadBalancer)],
-    VPCZoneIdentifier=Ref(sn),
+    LoadBalancerNames=[Ref("LoadBalancer")],
+    VPCZoneIdentifier=Ref("PublicSubnet"),
 ))
 
 t.add_resource(ScalingPolicy(
@@ -284,7 +284,7 @@ t.add_resource(Alarm(
     EvaluationPeriods="1",
     Threshold="60",
     ComparisonOperator="GreaterThanThreshold",
-    AlarmActions=[Ref("ScaleUpPolicy"), ],
+    AlarmActions=[Ref("ScaleUpPolicy")],
     InsufficientDataActions=[Ref("ScaleUpPolicy")],
 ))
 
