@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Generating CloudFormation template."""
 
 from troposphere import (
     Base64,

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Generating CloudFormation template."""
 
 from ipaddress import ip_network
 
