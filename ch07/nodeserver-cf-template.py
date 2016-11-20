@@ -228,7 +228,7 @@ t.add_resource(LaunchConfiguration(
 t.add_resource(AutoScalingGroup(
     "AutoscalingGroup",
     DesiredCapacity=Ref("ScaleCapacity"),
-    LaunchConfigurationName=Ref(LaunchConfiguration),
+    LaunchConfigurationName=Ref("LaunchConfiguration"),
     MinSize=2,
     MaxSize=5,
     LoadBalancerNames=[Ref("LoadBalancer")],
