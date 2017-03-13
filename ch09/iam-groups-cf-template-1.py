@@ -9,9 +9,6 @@ from troposphere.iam import (
     Group
 )
 
-# s , Group, LoginProfile, PolicyType
-
-
 t = Template()
 
 t.add_description("Effective DevOps in AWS: User Groups")
