@@ -3,7 +3,8 @@
 
 from troposphere.ecs import (
     TaskDefinition,
-    ContainerDefinition
+    ContainerDefinition,
+    LogConfiguration
 )
 from troposphere import ecs
 from awacs.aws import (
@@ -54,8 +55,15 @@ t.add_resource(TaskDefinition(
             Cpu=256,
             Name="helloworld",
             PortMappings=[ecs.PortMapping(
-                ContainerPort=3000)]
-        )
+                ContainerPort=3000)],
+            LogConfiguration=LogConfiguration(
+                LogDriver="awslogs",
+                Options={
+                    'awslogs-group': "/aws/ecs/helloworld",
+                    'awslogs-region': Ref("AWS::Region"),
+                }
+            )
+        ),
     ],
 ))
 

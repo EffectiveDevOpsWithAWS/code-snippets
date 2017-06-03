@@ -15,11 +15,9 @@ from troposphere import (
 
 from troposphere.ec2 import (
     VPC,
-    # CustomerGateway,
     InternetGateway,
     NetworkAcl,
     NetworkAclEntry,
-    # PortRange,
     Route,
     RouteTable,
     Subnet,
@@ -28,9 +26,6 @@ from troposphere.ec2 import (
     VPCGatewayAttachment,
     EIP,
     NatGateway,
-    # VPNConnection,
-    # VPNConnectionRoute,
-    # VPNGateway
 )
 
 t = Template()
@@ -68,30 +63,26 @@ t.add_resource(VPCGatewayAttachment(
     "VPNGatewayAttachment",
     VpcId=Ref("VPC"),
     InternetGatewayId=Ref("InternetGateway")
-    # VpnGatewayId=Ref("VPNGateway"),
-))
-
-t.add_resource(RouteTable(
-    "PrivateRouteTable",
-    VpcId=Ref("VPC"),
-    Tags=Tags(
-        Name=Sub("${AWS::StackName} Private"),
-    )
-))
-
-t.add_resource(RouteTable(
-    "PublicRouteTable",
-    VpcId=Ref("VPC"),
-    Tags=Tags(
-        Name=Sub("${AWS::StackName} Public"),
-    )
 ))
 
 accessibility = ["Private", "Public"]
 names = ["A", "C", "D", "E"]
-directions = ["Inbound", "Outbound"]
 count = 0
 for a in accessibility:
+    t.add_resource(RouteTable(
+        "{}RouteTable".format(a),
+        VpcId=Ref("VPC"),
+        Tags=Tags(
+            Name=Sub("${{AWS::StackName}} {}".format(a)),
+        )
+    ))
+    t.add_resource(NetworkAcl(
+        "{}NetworkAcl".format(a),
+        VpcId=Ref("VPC"),
+        Tags=Tags(
+            Name=Sub("${{AWS::StackName}} {}".format(a))
+        )
+    ))
     for n in names:
         t.add_resource(Subnet(
             "{}Subnet{}".format(a, n),
@@ -115,14 +106,7 @@ for a in accessibility:
             NetworkAclId=Ref("{}NetworkAcl".format(a)),
         ))
 
-    t.add_resource(NetworkAcl(
-        "{}NetworkAcl".format(a),
-        VpcId=Ref("VPC"),
-        Tags=Tags(
-            Name=Sub("${{AWS::StackName}} {}".format(a))
-        )
-    ))
-
+directions = ["Inbound", "Outbound"]
 
 for a in accessibility:
     for d in directions:
