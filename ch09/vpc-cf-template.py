@@ -66,7 +66,7 @@ t.add_resource(VPCGatewayAttachment(
 ))
 
 accessibility = ["Private", "Public"]
-names = ["A", "C", "D", "E"]
+names = ["A", "B", "C", "D"]
 count = 0
 for a in accessibility:
     t.add_resource(RouteTable(
